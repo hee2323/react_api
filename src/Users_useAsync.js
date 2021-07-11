@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
+import axios from 'axios';
+import useAsync from './useAsync';
 import User from './User';
-import { useUsersDispatch, useUsersState, getUsers } from './UsersContext';
+
+async function getUsers() {
+  const response = await axios.get('https://jsonplaceholder.typicode.com/users');
+  return response.data;
+}
 
 function Users() {
+  // true => 컴포넌트가 처음으로 렌더링될 때의 요청은 생략하도록
+  const [state, refetch] = useAsync(getUsers, [], true);
   const [userId, setUserId] = useState(null);
-  const state = useUsersState();
-  const dispatch = useUsersDispatch();
 
-  const { loading, data: users, error } = state.users;
-
-  // 버튼이 클릭될 때 호출되도록 onClick에 넣을 함수로 생성
-  const fetchData = () => {
-    getUsers(dispatch);
-  };
-
+  const { loading, data: users, error } = state;
   if (loading) return <div>로딩중..</div>;
   if (error) return <div>에러가 발생했습니다</div>;
-  if (!users) return <button onClick={fetchData}>불러오기</button>;
+  if (!users) return <button onClick={refetch}>불러오기</button>;
   
   return (
     <>
@@ -27,12 +27,12 @@ function Users() {
             </li>
         ))}
         </ul>
-        <button onClick={fetchData}>다시 불러오기</button>
+        <button onClick={refetch}>다시 불러오기</button>
         {/* && => userId가 존재하면 */}
         {userId && <User id={userId} />}
     </>
   );
 }
-  
+
 export default Users;
 
